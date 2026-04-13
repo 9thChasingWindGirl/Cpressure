@@ -1,0 +1,15 @@
+node_modules/
+dist/
+dist-electron/
+release/
+*.log
+.DS_Store
+Thumbs.db
+*.local
+.env
+.env.local
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
