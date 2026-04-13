@@ -1,5 +1,6 @@
 import { app, BrowserWindow, ipcMain, dialog, shell } from 'electron'
 import path from 'path'
+import fs from 'fs'
 import log from 'electron-log'
 import { fileScanner } from './services/fileScanner'
 import { appAnalyzer } from './services/appAnalyzer'
@@ -48,7 +49,34 @@ function createWindow() {
     mainWindow.loadURL('http://localhost:5173')
     mainWindow.webContents.openDevTools()
   } else {
-    mainWindow.loadFile(path.join(__dirname, '../dist/index.html'))
+    // 尝试多种路径以确保找到前端资源
+    const possiblePaths = [
+      path.join(__dirname, '../dist/index.html'),
+      path.join(__dirname, 'dist/index.html'),
+      path.join(app.getAppPath(), 'dist/index.html')
+    ]
+
+    let indexPath = ''
+    for (const path of possiblePaths) {
+      if (fs.existsSync(path)) {
+        indexPath = path
+        break
+      }
+    }
+
+    if (indexPath) {
+      log.info('Loading index.html from:', indexPath)
+      mainWindow.loadFile(indexPath)
+    } else {
+      log.error('Cannot find index.html. Possible paths checked:', possiblePaths)
+      dialog.showMessageBox(mainWindow!, {
+        type: 'error',
+        title: '错误',
+        message: '无法找到前端资源',
+        detail: '请重新安装应用程序'
+      })
+      app.exit(1)
+    }
   }
 
   mainWindow.on('closed', () => {

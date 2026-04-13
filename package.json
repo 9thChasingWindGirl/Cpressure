@@ -59,8 +59,9 @@
       "allowToChangeInstallationDirectory": true
     },
     "files": [
-      "dist/**/*",
-      "dist-electron/**/*"
+      "dist",
+      "dist-electron",
+      "index.html"
     ]
   }
 }
