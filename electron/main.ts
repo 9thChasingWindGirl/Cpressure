@@ -6,6 +6,7 @@ import { fileScanner } from './services/fileScanner'
 import { appAnalyzer } from './services/appAnalyzer'
 import { winUpdateCleanup } from './services/winUpdateCleanup'
 import { symlinkManager } from './services/symlinkManager'
+import { spaceSniffer } from './services/spaceSniffer'
 
 log.initialize()
 log.transports.file.level = 'info'
@@ -202,6 +203,24 @@ function registerIpcHandlers() {
       return await winUpdateCleanup.cleanUpdateCache(paths)
     } catch (error) {
       log.error('Clean update cache error:', error)
+      throw error
+    }
+  })
+
+  ipcMain.handle('spacesniffer:status', async () => {
+    try {
+      return await spaceSniffer.detectSpaceSniffer()
+    } catch (error) {
+      log.error('Detect SpaceSniffer error:', error)
+      throw error
+    }
+  })
+
+  ipcMain.handle('spacesniffer:launch', async (_, scanPath: string) => {
+    try {
+      return await spaceSniffer.launchSpaceSniffer(scanPath)
+    } catch (error) {
+      log.error('Launch SpaceSniffer error:', error)
       throw error
     }
   })

@@ -34,6 +34,11 @@ export interface UpdateCache {
   safeToDelete: boolean
 }
 
+export interface SpaceSnifferStatus {
+  installed: boolean
+  executablePath: string | null
+}
+
 export interface MessageBoxOptions {
   type?: 'none' | 'info' | 'error' | 'question' | 'warning'
   title?: string
@@ -85,6 +90,10 @@ export interface ElectronAPI {
   winupdate: {
     detect: () => Promise<UpdateCache[]>
     clean: (paths: string[]) => Promise<CleanResult>
+  }
+  spacesniffer: {
+    status: () => Promise<SpaceSnifferStatus>
+    launch: (scanPath: string) => Promise<DeleteResult>
   }
 }
 

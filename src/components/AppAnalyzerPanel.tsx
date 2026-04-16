@@ -61,7 +61,7 @@ export default function AppAnalyzerPanel() {
     setSelectedApp(app)
     setLoadingCache(true)
     try {
-      const dirs = await window.api.app.getAppCacheDirs(app.path)
+      const dirs = await window.api.app.getAppCacheDirs(app.name)
       setCacheDirs(dirs)
     } catch (error) {
       console.error('Get cache dirs failed:', error)
