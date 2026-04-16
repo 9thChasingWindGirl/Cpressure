@@ -36,6 +36,11 @@ export interface UpdateCache {
   safeToDelete: boolean
 }
 
+export interface SpaceSnifferStatus {
+  installed: boolean
+  executablePath: string | null
+}
+
 const api = {
   dialog: {
     openDirectory: () => ipcRenderer.invoke('dialog:openDirectory'),
@@ -71,6 +76,11 @@ const api = {
   winupdate: {
     detect: () => ipcRenderer.invoke('winupdate:detect'),
     clean: (paths: string[]) => ipcRenderer.invoke('winupdate:clean', paths)
+  },
+
+  spacesniffer: {
+    status: (): Promise<SpaceSnifferStatus> => ipcRenderer.invoke('spacesniffer:status'),
+    launch: (scanPath: string) => ipcRenderer.invoke('spacesniffer:launch', scanPath)
   }
 }
 
