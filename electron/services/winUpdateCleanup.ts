@@ -128,18 +128,17 @@ export async function cleanUpdateCache(paths: string[]): Promise<{ success: bool
     try {
       if (!fs.existsSync(targetPath)) continue
 
-      const size = calculateDirSize(targetPath)
-      
       const entries = fs.readdirSync(targetPath, { withFileTypes: true })
       for (const entry of entries) {
         const fullPath = path.join(targetPath, entry.name)
         try {
+          const entrySize = entry.isDirectory() ? calculateDirSize(fullPath) : fs.statSync(fullPath).size
           if (entry.isDirectory()) {
             fs.rmSync(fullPath, { recursive: true, force: true })
           } else {
             fs.unlinkSync(fullPath)
           }
-          freedSpace += size
+          freedSpace += entrySize
         } catch (error: any) {
           errors.push(`${entry.name}: ${error.message}`)
         }

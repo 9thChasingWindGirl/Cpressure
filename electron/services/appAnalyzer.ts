@@ -107,16 +107,16 @@ function calculateDirSize(dirPath: string): number {
   return size
 }
 
-export async function getAppCacheDirs(appPath: string): Promise<CacheDir[]> {
+export async function getAppCacheDirs(appName: string): Promise<CacheDir[]> {
   const cacheDirs: CacheDir[] = []
-  const appName = path.basename(appPath)
+  const normalizedName = appName.toLowerCase().replace(/[^a-z0-9]/g, '')
   
   const possiblePaths = [
-    { type: 'cache' as const, base: process.env.LOCALAPPDATA || 'C:\\Users\\' + process.env.USERNAME + '\\AppData\\Local', pattern: appName },
-    { type: 'cache' as const, base: process.env.APPDATA || 'C:\\Users\\' + process.env.USERNAME + '\\AppData\\Roaming', pattern: appName },
-    { type: 'config' as const, base: process.env.LOCALAPPDATA, pattern: appName },
-    { type: 'config' as const, base: process.env.APPDATA, pattern: appName },
-    { type: 'data' as const, base: process.env.LOCALAPPDATA, pattern: appName },
+    { type: 'cache' as const, base: process.env.LOCALAPPDATA || 'C:\\Users\\' + process.env.USERNAME + '\\AppData\\Local', pattern: normalizedName },
+    { type: 'cache' as const, base: process.env.APPDATA || 'C:\\Users\\' + process.env.USERNAME + '\\AppData\\Roaming', pattern: normalizedName },
+    { type: 'config' as const, base: process.env.LOCALAPPDATA, pattern: normalizedName },
+    { type: 'config' as const, base: process.env.APPDATA, pattern: normalizedName },
+    { type: 'data' as const, base: process.env.LOCALAPPDATA, pattern: normalizedName },
     { type: 'temp' as const, base: process.env.TEMP, pattern: '' }
   ]
   
@@ -127,11 +127,15 @@ export async function getAppCacheDirs(appPath: string): Promise<CacheDir[]> {
       if (fs.existsSync(base)) {
         const entries = fs.readdirSync(base, { withFileTypes: true })
         for (const entry of entries) {
-          if (pattern && !entry.name.toLowerCase().includes(pattern.toLowerCase())) {
+          const normalizedEntry = entry.name.toLowerCase().replace(/[^a-z0-9]/g, '')
+          if (pattern && !normalizedEntry.includes(pattern)) {
             continue
           }
           
           const fullPath = path.join(base, entry.name)
+          if (!fullPath.toUpperCase().startsWith('C:\\')) {
+            continue
+          }
           if (entry.isDirectory()) {
             const size = calculateDirSize(fullPath)
             if (size > 0) {

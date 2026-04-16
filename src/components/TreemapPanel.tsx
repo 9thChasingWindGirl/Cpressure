@@ -16,6 +16,11 @@ interface DriveInfo {
   freeSize: number
 }
 
+interface SpaceSnifferStatus {
+  installed: boolean
+  executablePath: string | null
+}
+
 function formatSize(bytes: number): string {
   if (bytes === 0) return '0 B'
   const k = 1024
@@ -61,11 +66,23 @@ export default function TreemapPanel() {
   const [scanning, setScanning] = useState(false)
   const [currentPath, setCurrentPath] = useState<string>('')
   const [breadcrumbs, setBreadcrumbs] = useState<{ name: string; path: string }[]>([])
+  const [spaceSniffer, setSpaceSniffer] = useState<SpaceSnifferStatus>({ installed: false, executablePath: null })
+  const [launchingSniffer, setLaunchingSniffer] = useState(false)
   const chartRef = useRef<any>(null)
 
   useEffect(() => {
     loadDrives()
+    loadSpaceSnifferStatus()
   }, [])
+
+  const loadSpaceSnifferStatus = async () => {
+    try {
+      const status = await window.api.spacesniffer.status()
+      setSpaceSniffer(status)
+    } catch (error) {
+      console.error('Failed to get SpaceSniffer status:', error)
+    }
+  }
 
   const loadDrives = async () => {
     try {
@@ -95,6 +112,25 @@ export default function TreemapPanel() {
       console.error('Scan failed:', error)
     } finally {
       setScanning(false)
+    }
+  }
+
+  const handleLaunchSpaceSniffer = async () => {
+    if (!selectedDrive) return
+
+    setLaunchingSniffer(true)
+    try {
+      const result = await window.api.spacesniffer.launch(selectedDrive)
+      if (!result.success) {
+        await window.api.dialog.showMessage({
+          type: 'error',
+          title: 'SpaceSniffer 启动失败',
+          message: result.error || '无法启动 SpaceSniffer',
+          buttons: ['确定']
+        })
+      }
+    } finally {
+      setLaunchingSniffer(false)
     }
   }
 
@@ -222,7 +258,22 @@ export default function TreemapPanel() {
           >
             {scanning ? '扫描中...' : '开始分析'}
           </button>
+
+          <button
+            onClick={handleLaunchSpaceSniffer}
+            disabled={!spaceSniffer.installed || launchingSniffer || !selectedDrive}
+            className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            title={spaceSniffer.installed ? '使用 SpaceSniffer 深度扫描' : '未检测到 SpaceSniffer'}
+          >
+            {launchingSniffer ? '启动中...' : '使用 SpaceSniffer 扫描'}
+          </button>
         </div>
+
+        {!spaceSniffer.installed && (
+          <p className="mt-3 text-sm text-amber-600 dark:text-amber-400">
+            未检测到 SpaceSniffer。可安装后放置于默认目录，或设置环境变量 SPACESNIFFER_PATH。
+          </p>
+        )}
 
         {breadcrumbs.length > 0 && (
           <div className="mt-4 flex items-center gap-1 text-sm">
